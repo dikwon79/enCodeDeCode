@@ -12,8 +12,7 @@ struct Number {
     int millions;
     int tenmillions;
     int hundredmillions;
-    int billion;
-
+    int billions;
 };
 
 // Function to convert words to int32_t
@@ -24,80 +23,56 @@ int32_t wordsToInt(char *words) {
     char *tens[] = {"", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"};
 
     struct Number decoded;
-    decoded.billion = decoded.hundredmillions = decoded.tenmillions = decoded.millions = 0;
-    decoded.hundredthousands = decoded.tenthousands = decoded.thousands = decoded.hundreds = decoded.tens = decoded.ones = 0;
+    decoded.billions = decoded.hundredmillions = decoded.tenmillions = decoded.millions= 0;
+    decoded.thousands = decoded.hundredthousands = decoded.tenthousands = decoded.hundreds = decoded.tens = decoded.ones = 0;
 
     char *token;
     token = strtok(words, " \n");
-    int tokencount = 0;
-    char *tokens[10];
-    char typeCheck = ' ';
 
     while (token != NULL) {
-        tokens[tokencount] = token;
-	tokencount++;
-	token = strtok(NULL, " \n");
-    }
-    for (int i = tokencount - 1; i >= 0; i--) {
-        printf("%s ", tokens[i]);
+        if (strcmp(token,"billion") == 0) {
+            decoded.billions = decoded.ones;
+        } else if (strcmp(token, "million") == 0) {
+            decoded.hundredmillions =decoded.hundreds;
+            decoded.tenmillions = decoded.tens;
+            decoded.millions = decoded.ones;
 
-        if (tokens[i] == "billion") {
-	    typeCheck = 'b';
-	} else if (tokens[i] == "million") {
-            typeCheck = 'm';
-        } else if (token[i] == "thousand") {
-            typeCheck = 't';
-        } else if (token[i] ==  "hundred") {
-            typeCheck = 'h';
+            decoded.hundreds = 0;
+            decoded.tens = 0;
+            decoded.ones = 0;
+
+        } else if (strcmp(token, "thousand") == 0) {
+            decoded.hundredthousands = decoded.hundreds;
+            decoded.tenthousands = decoded.tens;
+            decoded.thousands = decoded.ones;
+
+            decoded.hundreds = 0;
+            decoded.tens = 0;
+            decoded.ones = 0;
+
+        } else if (strcmp(token, "hundred") == 0) {
+            decoded.hundreds = decoded.ones;
+            decoded.ones = 0;
         } else {
             int i;
             for (i = 0; i < 10; i++) {
-                if (strcmp(token[i], ones[i]) == 0) {
-                    if (typeCheck == 'h'){
-	                decoded.hundreds = token[i];
-		    }else if(typeCheck == 't'){
-                    	decoded.thousands = token[i];
-		    }else if(typeCheck == 'm'){
-		        decoded.millions = token[i];
-                    }else if(typeCheck == 'b'){
-		        decoded.billions = token[i];
-		    }else{
-		        decoded.ones = token[i];
-		    }
+                if (strcmp(token, ones[i]) == 0) {
+                    decoded.ones = i;
                     break;
                 }
             }
             if (i == 10) {
                 for (i = 1; i < 10; i++) {
-                    if (strcmp(token[i], tens[i]) == 0) {
-                        if(typeCheck == 't'){
-                           decoded.tenthousands = token[i];
-                        }else if(typeCheck == 'm'){
-                           decoded.tenmillions = token[i];
-                        }else if(typeCheck == 'b'){
-                           decoded.tenbillions = token[i];
-                        }else{
-                           decoded.tens = token[i];
-                        }
-
+                    if (strcmp(token, tens[i]) == 0) {
+                        decoded.tens = i;
                         break;
                     }
                 }
                 if (i == 10) {
                     for (i = 1; i < 10; i++) {
                         if (strcmp(token, teens[i]) == 0) {
-                            if(typeCheck == 't'){
-	                       decoded.tenthousands = 1;
-                               decoded.thousands = token[i];
-			    }else if(typeCheck == 'm'){
-                               decoded.tenmillions = 1;
-                               decoded.millions = token[i];
-                            }else if(typeCheck == 'b'){
-                               decoded.billions = token[i];
-                            }else{
-                               decoded.tens = 1;
-                               decoded.ones = token[i];
-                            }
+                            decoded.tens = 1;  // Handle teens
+                            decoded.ones = i;
                             break;
                         }
                     }
@@ -105,12 +80,17 @@ int32_t wordsToInt(char *words) {
             }
         }
 
-
+        token = strtok(NULL, " \n");
     }
 
-    // Calculate the integer value based on the extracted struct
+    // Calculate the integer value based on the decoded struct
     int32_t result = 0;
+    result += decoded.billions * 1000000000;
+    result += decoded.hundredmillions * 100000000;
+    result += decoded.tenmillions * 10000000;
     result += decoded.millions * 1000000;
+    result += decoded.hundredthousands * 100000;
+    result += decoded.tenthousands * 10000;
     result += decoded.thousands * 1000;
     result += decoded.hundreds * 100;
     result += decoded.tens * 10;
